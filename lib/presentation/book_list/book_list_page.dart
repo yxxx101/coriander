@@ -1,3 +1,4 @@
+import 'package:coriander/domain/book.dart';
 import 'package:coriander/presentation/add_book/add_book_page.dart';
 import 'package:coriander/presentation/book_list/book_list_model.dart';
 import 'package:flutter/material.dart';
@@ -16,7 +17,8 @@ class BookListPage extends StatelessWidget {
           builder: (context, model, child) {
             final books = model.books;
             final listTiles = books
-                .map((book) => ListTile(
+                .map(
+                  (book) => ListTile(
                     title: Text(book.title),
                     trailing: IconButton(
                       icon: Icon(Icons.edit),
@@ -29,7 +31,28 @@ class BookListPage extends StatelessWidget {
                             ));
                         model.fetchBooks();
                       },
-                    )))
+                    ),
+                    onLongPress: () async {
+                      await showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: Text('削除しますか？'),
+                            actions: <Widget>[
+                              FlatButton(
+                                child: Text('OK'),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                      await deleteBook(model, context, book);
+                    },
+                  ),
+                )
                 .toList();
             return ListView(
               children: listTiles,
@@ -54,5 +77,47 @@ class BookListPage extends StatelessWidget {
         }),
       ),
     );
+  }
+
+  Future deleteBook(
+      BookListModel model, BuildContext context, Book book) async {
+    try {
+      await model.deleteBook(book);
+      await model.fetchBooks();
+//      await showDialog(
+//        context: context,
+//        builder: (BuildContext context) {
+//          return AlertDialog(
+//            title: Text('削除しました！'),
+//            actions: <Widget>[
+//              FlatButton(
+//                child: Text('OK'),
+//                onPressed: () {
+//                  Navigator.of(context).pop();
+//                },
+//              ),
+//            ],
+//          );
+//        },
+//      );
+//      Navigator.of(context).pop();
+    } catch (e) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text(e.toString()),
+            actions: <Widget>[
+              FlatButton(
+                child: Text('OK'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
 }
